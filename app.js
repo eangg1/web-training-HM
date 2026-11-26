@@ -29,6 +29,9 @@ const sorted = () => S.slice().sort((a, b) => ed(a) < ed(b) ? -1 : ed(a) > ed(b)
 const pc = sec => { const r = Math.round(sec); return Math.floor(r / 60) + ':' + pad(r % 60); };
 const ak = s => { const l = st.log[s.d]; return l && l.km ? l.km : km(s); };
 const target = s => (/Run 2/.test(s.t) || /Long run/.test(s.t)) && !/race pace/.test(txt(s)) ? [475, 535] : null;
+const easyLim = () => parseInt(((st.zn[0] || DATA.zones[0])[1].match(/\d+/) || [163])[0]);
+const isEasy = s => !!target(s) || (/Run 1/.test(s.t) && /easy/.test(txt(s)) && !/Z[345]|race pace/.test(txt(s)));
+const hrOver = s => { const l = st.log[s.d]; return !!(l && l.hr && isEasy(s) && l.hr >= easyLim()); };
 
 function logInfo(s) {
   const l = st.log[s.d]; if (!l) return '';
@@ -43,6 +46,7 @@ function logInfo(s) {
   if (l.rpe) p.push('RPE ' + l.rpe);
   if (l.sleep) p.push(l.sleep + ' jam tidur');
   if (l.fast) p.push('puasa');
+  if (hrOver(s)) p.push('⚠ di atas zona easy');
   if (l.note) p.push('“' + esc(l.note) + '”');
   return p.join(' · ');
 }
@@ -92,6 +96,8 @@ const warns = () => {
   if (rr.length === 2 && rr.every(s => st.log[s.d].rpe >= 8)) m.push('RPE ≥ 8 di dua sesi berturut-turut. Pertimbangkan sesi berikutnya lebih santai atau tambah istirahat.');
   const sl = S.filter(s => st.done[s.d] && st.log[s.d] && st.log[s.d].sleep).slice(-2);
   if (sl.length === 2 && sl.every(s => st.log[s.d].sleep < 6)) m.push('Tidur kurang dari 6 jam di dua sesi terakhir. Jangan paksa sesi berat.');
+  const er = S.filter(s => st.done[s.d] && st.log[s.d] && st.log[s.d].hr && isEasy(s)).slice(-3), eo = er.filter(hrOver);
+  if (eo.length >= 2) m.push(`${eo.length} dari ${er.length} easy run terakhir memiliki HR rata-rata di atas batas easy (${easyLim() - 1} bpm). Perlambat atau selingi jalan.${eo.some(s => st.log[s.d].fast) ? ' Sebagian saat puasa, saat HR memang bisa naik ±5–10 bpm.' : ''}`);
   return m.map(t => `<div class="warn">⚠️ ${t}</div>`).join('');
 };
 
@@ -128,7 +134,9 @@ function csv() {
 function openIcs() {
   $('#dlg').innerHTML = `<h3>Ekspor ke kalender</h3><p style="color:var(--mu);font-size:14px;margin-bottom:10px">Memuat sesi yang belum selesai dan tidak dilewati, sesuai tanggal terbaru, dengan pengingat 30 menit sebelumnya. Ekspor ulang bila jadwal berubah (impor ulang bisa menggandakan event; hapus yang lama dulu).</p>
     <div class="g2"><label>Jam biasa<input id="i1" type="time" value="06:00"></label><label>Jam saat Ramadan<input id="i2" type="time" value="20:00"></label></div>
-    <div class="acts"><button class="btn" data-ics>Unduh .ics</button><button class="btn sm" data-cl>Batal</button></div>`;
+    <label class="ck"><input id="i3" type="checkbox" checked> Tambah pengingat backup mingguan</label>
+    <div class="g2"><label>Hari backup<select id="i4"><option value="1">Senin</option><option value="2">Selasa</option><option value="3">Rabu</option><option value="4">Kamis</option><option value="5">Jumat</option><option value="6">Sabtu</option><option value="0" selected>Minggu</option></select></label><label>Jam backup<input id="i5" type="time" value="20:00"></label></div>
+    <div class="acts" style="margin-top:10px"><button class="btn" data-ics>Unduh .ics</button><button class="btn sm" data-cl>Batal</button></div>`;
   show();
 }
 function ics() {
@@ -143,6 +151,15 @@ function ics() {
       'SUMMARY:' + e((km(s) ? '🏃 ' : '🏋️ ') + s.t + (km(s) ? ' · ' + nk(km(s)) + ' km' : '')), 'DESCRIPTION:' + e(txt(s)),
       'BEGIN:VALARM', 'TRIGGER:-PT30M', 'ACTION:DISPLAY', 'DESCRIPTION:Latihan', 'END:VALARM', 'END:VEVENT');
   });
+  if ($('#i3').checked) {
+    const dow = +$('#i4').value, [h, m] = ($('#i5').value || '20:00').split(':').map(Number), a = dt(today());
+    while (a.getDay() !== dow) a.setDate(a.getDate() + 1);
+    a.setHours(h, m);
+    L.push('BEGIN:VEVENT', 'UID:hm-backup@hm-tracker', `DTSTAMP:${stamp}`, `DTSTART:${f(a)}`, `DTEND:${f(new Date(a.getTime() + 15 * 6e4))}`,
+      `RRULE:FREQ=WEEKLY;UNTIL=${DATA.race.replace(/-/g, '')}T235959`, 'SUMMARY:' + e('💾 Backup HM Tracker'),
+      'DESCRIPTION:' + e('Buka HM Tracker, tab Info, tekan Backup lalu simpan atau bagikan file-nya.'),
+      'BEGIN:VALARM', 'TRIGGER:PT0M', 'ACTION:DISPLAY', 'DESCRIPTION:Backup', 'END:VALARM', 'END:VEVENT');
+  }
   L.push('END:VCALENDAR'); dl('hm-plan.ics', L.join('\r\n'), 'text/calendar'); $('#dlg').close();
 }
 
