@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#16a34a">
+<title>HM Tracker</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div>
+    <h1>21K in 21st Birthday</h1>
+    <p id="sub"></p>
+  </div>
+  <div class="count"><b id="days">–</b><span>hari lagi</span></div>
+</header>
+
+<main>
+  <section id="today" class="view active"></section>
+  <section id="plan" class="view"></section>
+  <section id="info" class="view"></section>
+</main>
+
+<nav>
+  <button data-v="today" class="on">Hari ini</button>
+  <button data-v="plan">Plan</button>
+  <button data-v="info">Info</button>
+</nav>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
