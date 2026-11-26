@@ -423,6 +423,7 @@ function renderInfo() {
     <h2>Zona latihan</h2><div class="card"><table>
     <tr><th>Zona</th><th>HR</th><th>Pace</th></tr>
     ${DATA.zones.map((z0, i) => { const z = st.zn[i] || z0; return `<tr><td><b>${esc(z[0])}</b><br><small style="color:var(--mu)">${esc(z[3])}</small></td><td>${esc(z[1])}</td><td>${esc(z[2])}</td></tr>`; }).join('')}</table></div>
+    ${strengthHtml()}
     <h2>Panduan Ramadan & umum</h2><div class="card"><dl class="g">
     ${DATA.guide.map(g => `<dt>${esc(g[0])}</dt><dd>${esc(g[1])}</dd>`).join('')}</dl></div>
     <h2>Data</h2><div class="card"><p style="color:var(--mu);font-size:14px;margin-bottom:12px">Progres, catatan, skip, dan editan tersimpan di browser ini. Unduh <b>data.js</b> untuk mengganti file plan, atau unduh backup untuk menyimpan progres.</p>
@@ -551,6 +552,7 @@ document.addEventListener('change', e => {
   r.readAsText(e.target.files[0]);
 });
 
+// Geser kiri/kanan untuk pindah tab
 let sw = null;
 document.addEventListener('touchstart', e => {
   const t = e.touches[0];
