@@ -1,8 +1,14 @@
 (() => {
 const $ = s => document.querySelector(s), KEY = 'hm-tracker-v1';
-const S = DATA.sessions;
-let st = { done: {}, mode: 'adj' };
+const S = DATA.sessions, ORIG = JSON.parse(JSON.stringify(S));
+let st = { done: {}, mode: 'adj', edits: {} };
 try { Object.assign(st, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+const applyEdits = () => {
+  S.forEach((x, i) => Object.assign(x, ORIG[i]));
+  Object.keys(st.edits || {}).forEach(d => { const x = S.find(y => y.d === d); if (x) Object.assign(x, st.edits[d]); });
+};
+applyEdits();
+const dl = (name, text, type) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); };
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
 
 const pad = n => String(n).padStart(2, '0');
@@ -14,7 +20,7 @@ const km = s => st.mode === 'adj' ? s.ka : s.ko;
 const txt = s => st.mode === 'adj' ? s.pa : s.po;
 const nk = n => (Math.round(n * 10) / 10).toString().replace('.', ',');
 const isRam = w => w >= 11 && w <= 15;
-const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 function toggle(d) { st.done[d] ? delete st.done[d] : st.done[d] = 1; save(); render(); }
 
@@ -23,7 +29,7 @@ function row(s, showDate) {
   return `<div class="row ${done ? 'done' : ''}" data-d="${s.d}">
     <div class="chk">${done ? '✓' : ''}</div>
     <div class="t"><b>${esc(s.t)}${k ? ' · ' + nk(k) + ' km' : ''}</b>
-    <small>${showDate ? fmt(s.d) + ' · ' : s.day + ', ' + dt(s.d).getDate() + ' · '}${esc(txt(s))}</small></div></div>`;
+    <small>${showDate ? fmt(s.d) + ' · ' : s.day + ', ' + dt(s.d).getDate() + ' · '}${esc(txt(s))}</small></div>${showDate ? '' : `<button class="ed" data-e="${s.d}" aria-label="Edit sesi">✎</button>`}</div>`;
 }
 
 function stats() {
@@ -88,8 +94,21 @@ function renderInfo() {
     ${DATA.zones.map(z => `<tr><td><b>${esc(z[0])}</b><br><small style="color:var(--mu)">${esc(z[3])}</small></td><td>${esc(z[1])}</td><td>${esc(z[2])}</td></tr>`).join('')}</table></div>
     <h2>Panduan Ramadan & umum</h2><div class="card"><dl class="g">
     ${DATA.guide.map(g => `<dt>${esc(g[0])}</dt><dd>${esc(g[1])}</dd>`).join('')}</dl></div>
-    <h2>Data</h2><div class="card"><p style="color:var(--mu);font-size:14px;margin-bottom:10px">Progres tersimpan di browser ini.</p>
-    <button class="btn sm" id="reset">Reset semua progres</button></div>`;
+    <h2>Data</h2><div class="card"><p style="color:var(--mu);font-size:14px;margin-bottom:12px">Progres dan editan tersimpan di browser ini. Unduh <b>data.js</b> untuk mengganti file plan di folder Anda, atau unduh backup untuk menyimpan progres.</p>
+    <div class="acts"><button class="btn sm" id="dl-data">⬇ Unduh data.js</button><button class="btn sm" id="dl-bak">⬇ Backup</button>
+    <button class="btn sm" id="imp">⬆ Pulihkan backup</button><button class="btn sm" id="rst-ed">Reset editan</button><button class="btn sm" id="reset">Reset progres</button></div>
+    <input type="file" id="file" accept=".json" hidden></div>`;
+}
+
+function openEdit(d) {
+  const x = S.find(y => y.d === d), a = st.mode === 'adj';
+  $('#dlg').innerHTML = `<h3>Edit · ${fmt(d)}</h3>
+    <label>Nama sesi<input id="e1" value="${esc(x.t)}"></label>
+    <label>Detail (${a ? 'plan disesuaikan' : 'plan awal'})<textarea id="e2" rows="5">${esc(txt(x))}</textarea></label>
+    <label>Jarak (km)<input id="e3" type="number" step="0.1" min="0" value="${km(x)}"></label>
+    <div class="acts"><button class="btn" data-sv="${d}">Simpan</button>
+    <button class="btn sm" data-rs="${d}">Kembalikan</button><button class="btn sm" data-cl>Batal</button></div>`;
+  $('#dlg').showModal();
 }
 
 function renderHead() {
@@ -102,6 +121,21 @@ function renderHead() {
 function render() { renderHead(); renderToday(); renderPlan(); renderInfo(); }
 
 document.addEventListener('click', e => {
+  const E = e.target.closest('[data-e]'); if (E) return openEdit(E.dataset.e);
+  const sv = e.target.closest('[data-sv]');
+  if (sv) {
+    const d = sv.dataset.sv, x = S.find(y => y.d === d), a = st.mode === 'adj';
+    x.t = $('#e1').value.trim() || x.t; x[a ? 'pa' : 'po'] = $('#e2').value.trim(); x[a ? 'ka' : 'ko'] = parseFloat($('#e3').value) || 0;
+    st.edits[d] = { t: x.t, pa: x.pa, ka: x.ka, po: x.po, ko: x.ko };
+    save(); $('#dlg').close(); return render();
+  }
+  const rs = e.target.closest('[data-rs]');
+  if (rs) { delete st.edits[rs.dataset.rs]; applyEdits(); save(); $('#dlg').close(); return render(); }
+  if (e.target.closest('[data-cl]')) return $('#dlg').close();
+  if (e.target.id === 'dl-data') return dl('data.js', 'const DATA = ' + JSON.stringify(DATA, null, 1) + ';\n', 'text/javascript');
+  if (e.target.id === 'dl-bak') return dl('hm-backup.json', JSON.stringify(st), 'application/json');
+  if (e.target.id === 'imp') return $('#file').click();
+  if (e.target.id === 'rst-ed' && confirm('Kembalikan semua sesi ke data awal?')) { st.edits = {}; applyEdits(); save(); return render(); }
   const r = e.target.closest('[data-d]'); if (r) return toggle(r.dataset.d);
   const m = e.target.closest('[data-m]'); if (m) { st.mode = m.dataset.m; save(); return render(); }
   const n = e.target.closest('nav button');
@@ -110,6 +144,16 @@ document.addEventListener('click', e => {
     n.classList.add('on'); $('#' + n.dataset.v).classList.add('active'); scrollTo(0, 0);
   }
   if (e.target.id === 'reset' && confirm('Hapus semua progres?')) { st.done = {}; save(); render(); }
+});
+
+document.addEventListener('change', e => {
+  if (e.target.id !== 'file' || !e.target.files[0]) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try { st = Object.assign({ done: {}, mode: 'adj', edits: {} }, JSON.parse(r.result)); applyEdits(); save(); render(); alert('Backup dipulihkan.'); }
+    catch (x) { alert('File backup tidak valid.'); }
+  };
+  r.readAsText(e.target.files[0]);
 });
 
 render();
