@@ -1,4 +1,5 @@
 (() => {
+const VER = '1.2.0';
 const $ = s => document.querySelector(s), KEY = 'hm-tracker-v1';
 const S = DATA.sessions, ORIG = JSON.parse(JSON.stringify(S));
 const norm = o => Object.assign({ done: {}, mode: 'adj', edits: {}, log: {}, skip: {}, move: {}, lastBak: 0, lt: [], zn: {}, undo: null }, o);
@@ -418,7 +419,8 @@ function renderInfo() {
     <h2>Data</h2><div class="card"><p style="color:var(--mu);font-size:14px;margin-bottom:12px">Progres, catatan, skip, dan editan tersimpan di browser ini. Unduh <b>data.js</b> untuk mengganti file plan, atau unduh backup untuk menyimpan progres.</p>
     <div class="acts"><button class="btn sm" id="dl-data">⬇ Unduh data.js</button><button class="btn sm" data-bak>⬇ Backup</button><button class="btn sm" data-share>📤 Bagikan</button><button class="btn sm" data-csv>⬇ CSV riwayat</button><button class="btn sm" data-ical>📅 Kalender (.ics)</button>
     <button class="btn sm" id="imp">⬆ Pulihkan backup</button><button class="btn sm" id="rst-ed">Reset editan</button><button class="btn sm" id="reset">Reset progres</button></div>
-    <input type="file" id="file" accept=".json" hidden></div>`;
+    <input type="file" id="file" accept=".json" hidden></div>
+    <p class="ver">HM Tracker v${VER}</p>`;
 }
 
 function openEdit(d) {
@@ -464,6 +466,18 @@ function renderHead() {
 }
 function render() { renderHead(); renderToday(); renderPlan(); renderProg(); renderInfo(); }
 const done = () => { $('#dlg').close(); save(); render(); };
+
+const dlg = $('#dlg');
+let downOut = false;
+const outside = e => {
+  const r = dlg.getBoundingClientRect();
+  return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+};
+dlg.addEventListener('pointerdown', e => { downOut = e.target === dlg && outside(e); });
+dlg.addEventListener('click', e => {
+  if (downOut && e.target === dlg && outside(e)) dlg.close();
+  downOut = false;
+});
 
 document.addEventListener('click', e => {
   const g = a => e.target.closest('[' + a + ']'); let x;
@@ -527,6 +541,27 @@ document.addEventListener('change', e => {
   r.onload = () => { try { st = norm(JSON.parse(r.result)); applyEdits(); save(); render(); alert('Backup dipulihkan.'); } catch (x) { alert('File backup tidak valid.'); } };
   r.readAsText(e.target.files[0]);
 });
+
+let sw = null;
+document.addEventListener('touchstart', e => {
+  const t = e.touches[0];
+  const skip = e.touches.length > 1 || $('#dlg').open || e.target.closest('input,textarea,select,pre')
+    || t.clientX < 24 || t.clientX > innerWidth - 24;
+  sw = skip ? null : { x: t.clientX, y: t.clientY, t: Date.now() };
+}, { passive: true });
+document.addEventListener('touchend', e => {
+  if (!sw) return;
+  const t = e.changedTouches[0], dx = t.clientX - sw.x, dy = t.clientY - sw.y, ms = Date.now() - sw.t;
+  sw = null;
+  if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5 || ms > 700) return;
+  const b = [...document.querySelectorAll('nav button')];
+  const i = b.findIndex(x => x.classList.contains('on')), j = i + (dx < 0 ? 1 : -1);
+  if (j < 0 || j >= b.length) return;
+  document.documentElement.dataset.dir = dx < 0 ? 'next' : 'prev';
+  b[j].click();
+  setTimeout(() => delete document.documentElement.dataset.dir, 400);
+}, { passive: true });
+document.addEventListener('touchcancel', () => { sw = null; }, { passive: true });
 
 const sysDark = () => matchMedia('(prefers-color-scheme: dark)').matches;
 const syncTheme = () => {
