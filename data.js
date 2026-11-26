@@ -1103,6 +1103,42 @@ const DATA = {
    "Antara, CNN Indonesia, Metro TV (KHGT Muhammadiyah); keputusan pemerintah menunggu sidang isbat Kemenag."
   ]
  ],
+
+ "strength": [
+  {
+   "t": "Strength A",
+   "sub": "Kaki depan & glute · Senin",
+   "warm": "Pemanasan 5 mnt: jalan cepat, 10 glute bridge, 10 squat tanpa beban.",
+   "ex": [
+    ["Goblet squat", "Dumbbell di depan dada, turun sampai paha sejajar lantai. Lutut searah jari kaki, tumit tetap menapak.", "rep"],
+    ["Romanian deadlift (dumbbell)", "Pinggul mundur, lutut sedikit tekuk, punggung lurus. Turun sampai hamstring terasa tertarik, bukan sampai punggung membulat.", "rep"],
+    ["Hip thrust", "Punggung atas bersandar di bangku, dorong pinggul sampai badan lurus dan tahan 1 detik di atas.", "rep"],
+    ["Side plank", "Siku di bawah bahu, badan satu garis dari kepala sampai kaki, pinggul jangan turun.", "20–40 dtk per sisi"]
+   ]
+  },
+  {
+   "t": "Strength B",
+   "sub": "Satu kaki, betis & core · Kamis",
+   "warm": "Pemanasan 5 mnt: jalan cepat, 10 leg swing per kaki, 10 squat tanpa beban.",
+   "ex": [
+    ["Step-up", "Bangku atau kursi kokoh setinggi lutut. Dorong dengan kaki yang di atas, turun pelan 2–3 detik.", "rep per kaki"],
+    ["Reverse lunge", "Langkah mundur, lutut depan searah jari kaki, badan tegak. Dorong dengan tumit kaki depan.", "rep per kaki"],
+    ["Single-leg calf raise", "Berdiri satu kaki di tepi anak tangga, naik 1–2 detik, turun 3 detik penuh. Pegangan dinding bila perlu.", "rep per kaki"],
+    ["Single-leg glute bridge", "Telentang, satu kaki lurus ke atas, dorong pinggul dengan tumit kaki yang menapak. Pinggul tetap sejajar.", "rep per kaki"],
+    ["Dead bug", "Telentang, punggung bawah menempel lantai. Turunkan lengan dan kaki berlawanan pelan-pelan.", "20–40 dtk"]
+   ]
+  }
+ ],
+ "strengthTips": [
+  ["Beban", "Pilih beban yang menyisakan ±2 rep di akhir tiap set (sesuai catatan di Plan). Teknik lebih penting daripada beban."],
+  ["Set & rep", "Mengikuti fase di tab Plan. Untuk gerakan satu kaki, rep dihitung per kaki. Gerakan isometrik (plank, dead bug) berbasis waktu di semua fase."],
+  ["Jeda", "60–90 detik antar set; 2 menit di fase Specific untuk gerakan terberat."],
+  ["Alat", "Sepasang dumbbell dan bangku. Tanpa dumbbell, tas ransel berisi buku bisa dipakai."],
+  ["Kamis sebelum long run", "Strength B jangan sampai gagal rep. Kaki harus segar untuk long run hari Sabtu."],
+  ["Saat Ramadan", "Ikuti versi maintenance di Plan: 2 set, beban turun ±10%. Lakukan setelah berbuka dan jeda makan besar."],
+  ["Hentikan bila", "Nyeri tajam di sendi (terutama lutut dan punggung bawah). Pegal otot wajar, nyeri tajam tidak."]
+ ],
+
  "race": "2027-03-29",
  "start": "2026-11-30",
  "ramadan": "2027-02-08",

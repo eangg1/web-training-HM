@@ -1,5 +1,5 @@
 (() => {
-const VER = '1.2.0';
+const VER = '1.3.0';
 const $ = s => document.querySelector(s), KEY = 'hm-tracker-v1';
 const S = DATA.sessions, ORIG = JSON.parse(JSON.stringify(S));
 const norm = o => Object.assign({ done: {}, mode: 'adj', edits: {}, log: {}, skip: {}, move: {}, lastBak: 0, lt: [], zn: {}, undo: null }, o);
@@ -403,6 +403,15 @@ function renderProg() {
     <div class="lgd"><span style="opacity:.6">■ Plan</span><span style="color:var(--ac)">■ Aktual</span></div></div>
     <h2>Tren long run menuju 21 km</h2><div class="card">${chart(weeks, lp, la, true, 21.1)}${lg('Plan', 'Aktual')}</div><h2>Proyeksi waktu race</h2><div class="card">${proj()}</div><h2>Puasa vs tidak puasa</h2><div class="card">${fastCmp()}</div><h2>Efisiensi aerobik</h2><div class="card">${effCard()}</div>${ltCard()}${wkCard(weeks)}`;
 }
+
+const strengthHtml = () => {
+  if (!DATA.strength) return '';
+  const g = DATA.strength.map(s => `<details><summary><div><b>${esc(s.t)}</b><small>${esc(s.sub)}</small></div><div class="r">${s.ex.length} gerakan</div></summary>
+    <div class="in"><p style="color:var(--mu);font-size:13px;margin-bottom:6px">${esc(s.warm)}</p>
+    ${s.ex.map((e, i) => `<div class="row" style="cursor:default"><div class="t"><b>${i + 1}. ${esc(e[0])}</b><small>${esc(e[1])}</small><small style="color:var(--ac)">${esc(e[2])}</small></div></div>`).join('')}</div></details>`).join('');
+  const tips = (DATA.strengthTips || []).map(x => `<dt>${esc(x[0])}</dt><dd>${esc(x[1])}</dd>`).join('');
+  return `<h2>Latihan strength</h2>${g}${tips ? `<div class="card"><dl class="g">${tips}</dl></div>` : ''}`;
+};
 
 function renderInfo() {
   const dd = s => dt(s).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
