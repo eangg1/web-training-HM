@@ -52,9 +52,12 @@ const act = s => { const d = s.d; return st.done[d]
   : `<button class="btn" data-lg="${d}">✓ Selesai & catat</button><button class="btn sm" data-sk="${d}">Skip</button><button class="btn sm" data-mv="${d}">Pindah tanggal</button>`
     + (st.skip[d] || st.move[d] ? `<button class="btn sm" data-un="${d}">Kembalikan</button>` : ''); };
 
+const ty = s => /Strength/.test(s.t) ? 'st' : /Long run|RACE/.test(s.t) ? 'lr' : 'rn';
+const tyName = s => ({ st: 'Strength', lr: /RACE/.test(s.t) ? 'Race' : 'Long run', rn: 'Lari' })[ty(s)];
+
 function row(s) {
   const k = km(s), d = st.done[s.d], sk = st.skip[s.d], mv = st.move[s.d], li = d ? logInfo(s) : '';
-  return `<div class="row ${d ? 'done' : sk ? 'skip' : ''}" data-s="${s.d}">
+  return `<div class="row ty-${ty(s)} ${d ? 'done' : sk ? 'skip' : ''}" data-s="${s.d}">
     <div class="chk">${d ? '✓' : sk ? '–' : mv ? '⇄' : ''}</div>
     <div class="t"><b>${esc(s.t)}${k ? ' · ' + nk(k) + ' km' : ''}</b>
     <small>${fmt(ed(s))}${mv ? ' (dipindah)' : ''}${sk ? ' · dilewati' : ''} · ${esc(txt(s))}</small>${li ? `<small class="lg">${li}</small>` : ''}</div>
@@ -295,8 +298,8 @@ function renderToday() {
   else {
     const k = km(cur), changed = st.mode === 'adj' && cur.chg && cur.po !== cur.pa, e = ed(cur);
     const lab = st.done[cur.d] ? 'Sesi hari ini · selesai' : st.skip[cur.d] ? 'Sesi hari ini · dilewati' : e === t ? 'Sesi hari ini' : e < t ? 'Belum selesai' : t < S[0].d ? 'Sesi pertama' : 'Sesi berikutnya';
-    html += `<h2>${lab}</h2><div class="card big">
-      <span class="tag">${cur.ph}</span><span class="tag">Minggu ${cur.w}</span>${isRam(cur.w) ? '<span class="tag ram">Ramadan</span>' : ''}
+    html += `<h2>${lab}</h2><div class="card big ty-${ty(cur)}">
+      <span class="tag tyt">${tyName(cur)}</span><span class="tag">${cur.ph}</span><span class="tag">Minggu ${cur.w}</span>${isRam(cur.w) ? '<span class="tag ram">Ramadan</span>' : ''}
       <h3>${esc(cur.t)}</h3><p>${fmt(e)}${st.move[cur.d] ? ' (dipindah dari ' + fmt(cur.d) + ')' : ''}</p>
       ${k ? `<div class="km">${nk(k)} km</div>` : ''}
       <p style="margin-top:6px;color:var(--tx)">${esc(txt(cur))}</p>
@@ -309,7 +312,7 @@ function renderToday() {
 
 let pv = 'list', cm = null;
 const monthsR = () => { const a = [], e = dt(DATA.race); for (let d = new Date(dt(DATA.start).getFullYear(), dt(DATA.start).getMonth(), 1); d <= e; d.setMonth(d.getMonth() + 1)) a.push(iso(d).slice(0, 7)); return a; };
-const pvBar = () => `<div class="toggle"><button data-pv="list" class="${pv === 'list' ? 'on' : ''}">Daftar</button><button data-pv="cal" class="${pv === 'cal' ? 'on' : ''}">Kalender</button></div><div class="acts" style="margin-bottom:12px"><button class="btn sm" data-sh>↔ Geser plan</button>${st.undo ? '<button class="btn sm" data-shu>↩ Urungkan geser</button>' : ''}</div>`;
+const pvBar = () => `<div class="toggle"><button data-pv="list" class="${pv === 'list' ? 'on' : ''}">Daftar</button><button data-pv="cal" class="${pv === 'cal' ? 'on' : ''}">Kalender</button></div><div class="acts" style="margin-bottom:12px"><button class="btn sm" data-sh>↔ Geser plan</button>${st.undo ? '<button class="btn sm" data-shu>↩ Urungkan geser</button>' : ''}</div><div class="cleg" style="margin-bottom:12px"><span class="cx ok ty-rn">Lari</span><span class="cx ok ty-lr">Long run</span><span class="cx ok ty-st">Strength</span></div>`;
 
 function calHtml() {
   const M = monthsR(), t = today();
@@ -323,7 +326,7 @@ function calHtml() {
     const ds = `${Y}-${pad(Mo)}-${pad(d)}`, ss = by[ds] || [];
     c += `<div class="cd${ds === t ? ' td' : ''}${isRamD(ds) ? ' rm' : ''}"><i>${d}</i>${ss.map(s => {
       const k = st.done[s.d] ? 'ok' : st.skip[s.d] ? 'sk' : ds < t ? 'ov' : st.move[s.d] ? 'mv' : 'pd';
-      return `<span class="cx ${k}" data-s="${s.d}">${ab(s)}${km(s) ? ' ' + nk(km(s)) : ''}</span>`;
+      return `<span class="cx ${k} ty-${ty(s)}" data-s="${s.d}">${k === 'ok' ? '✓ ' : ''}${ab(s)}${km(s) ? ' ' + nk(km(s)) : ''}</span>`;
     }).join('')}</div>`;
   }
   const ms = S.filter(s => ed(s).slice(0, 7) === cm), md = ms.filter(s => st.done[s.d]);
@@ -332,7 +335,7 @@ function calHtml() {
     <div class="calh"><button class="btn sm" data-cm="-1" ${i <= 0 ? 'disabled' : ''}>‹</button><b>${name}</b><button class="btn sm" data-cm="1" ${i >= M.length - 1 ? 'disabled' : ''}>›</button></div>
     <div class="cal">${['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'].map(x => `<div class="cw">${x}</div>`).join('')}${c}</div>
     <p class="cs">${md.length}/${ms.length} sesi selesai · ${ms.filter(s => st.skip[s.d]).length} skip · ${nk(md.reduce((a, s) => a + ak(s), 0))} km aktual</p>
-    <div class="cleg"><span class="cx ok">Selesai</span><span class="cx pd">Belum</span><span class="cx ov">Tertunda</span><span class="cx sk">Skip</span><span class="cx mv">Dipindah</span></div>
+    <div class="cleg"><span class="cx ok ty-rn">Lari biasa</span><span class="cx ok ty-lr">Long run</span><span class="cx ok ty-st">Strength</span></div><div class="cleg" style="margin-top:6px"><span class="cx ok ty-rn">✓ Selesai</span><span class="cx pd ty-rn">Belum</span><span class="cx ov">Tertunda</span><span class="cx sk">Skip</span><span class="cx mv">Dipindah</span></div>
     <p class="cs">S·A/S·B strength · Q quality · E easy · LR long run · SO shakeout. Latar kuning = Ramadan. Ketuk sesi untuk membuka.</p>`;
 }
 

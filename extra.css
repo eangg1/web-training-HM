@@ -36,3 +36,15 @@ dialog{margin:auto;max-height:calc(100dvh - 32px);overflow-y:auto}
 .cs{color:var(--mu);font-size:13px;margin:10px 0}
 .cleg{display:flex;flex-wrap:wrap;gap:6px}.cleg .cx{display:inline-block;cursor:default;padding:3px 8px}
 .dot.rm{fill:var(--wr)}
+
+:root{--t-st:#8b5cf6;--t-lr:#3b82f6;--t-rn:#16a34a}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--t-st:#a78bfa;--t-lr:#60a5fa;--t-rn:#22c55e}}
+:root[data-theme=dark]{--t-st:#a78bfa;--t-lr:#60a5fa;--t-rn:#22c55e}
+.cx{--tc:var(--mu);border-left:3px solid var(--tc)}
+.ty-st{--tc:var(--t-st)}.ty-lr{--tc:var(--t-lr)}.ty-rn{--tc:var(--t-rn)}
+.row[class*=ty-]{border-left:4px solid var(--tc);padding-left:10px}
+.cx.ok{background:var(--tc);border-color:var(--tc);color:#fff}
+.cx.pd{background:color-mix(in srgb,var(--tc) 16%,transparent);color:var(--tc);border-color:transparent;border-left-color:var(--tc)}
+.cx.sk{border-left-color:var(--tc)}.cx.ov{border-left-color:var(--tc)}.cx.mv{border-left-color:var(--tc)}
+.card.big[class*=ty-] .km{color:var(--tc)}
+.tag.tyt{background:color-mix(in srgb,var(--tc) 18%,transparent);color:var(--tc)}
